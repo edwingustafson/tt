@@ -1,0 +1,45 @@
+{
+	"name": "tt",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:dev-24-bookworm",
+	"runArgs": [
+		"--name", "tt", "--rm",
+		// Written by initializeCommand: the host's time zone, as TZ.
+		"--env-file", "${localWorkspaceFolder}/.devcontainer/host.env"
+	],
+	"initializeCommand": "sh ./.devcontainer/initializeCommand.sh",
+
+	// Claude Code configuration from the Mac: settings, CLAUDE.md, memory,
+	// plugins, and the login in ~/.claude/.credentials.json. Bind mounts, so
+	// anything Claude writes in here (a /login, new memories) lands on the host.
+	"mounts": [
+		"source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached",
+		"source=${localEnv:HOME}/.claude.json,target=/home/node/.claude.json,type=bind,consistency=cached",
+
+		// Host keys only, read-only, as the system-wide file so ssh never has
+		// to write to it and ~/.ssh is not created root-owned by the mount.
+		// No private keys come in: SSH goes through the forwarded agent.
+		"source=${localEnv:HOME}/.ssh/known_hosts,target=/etc/ssh/ssh_known_hosts,type=bind,readonly"
+	],
+
+	// Git credentials are forwarded by the Dev Containers extension, not
+	// mounted: it copies the host ~/.gitconfig in on start (identity and
+	// aliases), proxies HTTPS auth to the Mac's osxkeychain helper, and
+	// forwards the host ssh-agent. All three work in any process under a
+	// VS Code window, claude included, and nothing secret lands on disk here.
+	"remoteEnv": {
+		// Bun and the native Claude installer both put binaries under $HOME.
+		"PATH": "/home/node/.bun/bin:/home/node/.local/bin:${containerEnv:PATH}",
+
+		// Dev Containers forwards DISPLAY to the host, and any X connection
+		// starts XQuartz on the Mac. A TUI needs a terminal, not a display.
+		"DISPLAY": "",
+
+		"COLORTERM": "truecolor"
+	},
+	"postCreateCommand": "sh ./.devcontainer/postCreateCommand.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": ["oven.bun-vscode"]
+		}
+	}
+}
